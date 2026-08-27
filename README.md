@@ -1,291 +1,270 @@
 # Club Pass Belém
 
-### Subscriptions / QR Access / Payments / iOS
+### Assinaturas / Acesso por QR Code / Pagamentos / iOS
 
-## Overview
+## Visão Geral
 
-Subscription platform connecting members to partner venues through Mercado Pago payments, digital membership management and QR Code-based access validation.
+Club Pass Belém é uma plataforma de assinatura e acesso por QR Code que conecta associados a estabelecimentos parceiros por meio de pagamentos Mercado Pago, gestão digital de assinatura e validação de uso do benefício.
 
-The product includes a PHP REST backend, a React/Vite web and admin application, validator flows, MySQL persistence and a native SwiftUI iOS application.
+O produto inclui backend REST em PHP, interfaces web/admin com React/Vite, fluxos de validação, persistência MySQL e aplicativo iOS nativo com SwiftUI.
 
-> Source code remains private. This repository is a public technical case study with sanitized screenshots and no secrets, tokens, credentials or sensitive infrastructure details.
+Este repositório é um estudo de caso técnico público com screenshots sanitizados. Código-fonte privado, credenciais, URLs de produção, tokens de provedor, dados de clientes e detalhes sensíveis de infraestrutura não são publicados.
 
-## Problem
+## Problema
 
-The product needed to connect recurring membership payment with real-world benefit usage at partner venues.
+O produto precisava conectar pagamento recorrente de assinatura com uso real de benefício em estabelecimentos parceiros.
 
-That means the system cannot stop at "user subscribed". It must activate membership only after payment confirmation, expose member identity safely, generate QR credentials, validate access at the venue, enforce usage rules and support web, admin, validator and iOS clients against the same backend.
+Isso significa que o sistema não termina em "usuário assinou". Ele precisa ativar o acesso somente após confirmação do pagamento, expor identidade do associado com segurança, gerar credenciais em QR Code, validar acesso no estabelecimento, aplicar regras de uso e atender clientes web, admin, validador e iOS usando o mesmo backend.
 
-## Solution
+## Solução
 
-The private codebase implements a backend-owned subscription and access model.
+O código privado implementa um modelo de assinatura e acesso controlado pelo backend.
 
-Payment state is confirmed through Mercado Pago flows and webhooks, subscription access is evaluated by backend services, and QR Code display/validation depends on account, subscription, venue and check-in rules.
+O estado do pagamento é confirmado por fluxos Mercado Pago e webhooks, o acesso da assinatura é avaliado por serviços backend, e a exibição/validação do QR Code depende de regras de conta, assinatura, estabelecimento e check-in.
 
-The iOS app is presented as hands-on mobile development inside a real product, not as a claim of senior iOS specialization.
+O app iOS é um cliente real do produto para associados e validadores, demonstrando experiência prática em iOS dentro de um sistema full stack mais amplo.
 
-## Product Flow
+## Fluxo do Produto
 
 ```mermaid
 flowchart LR
-    A[Customer] --> B[Account Registration]
-    B --> C[Pending Subscription]
-    C --> D{Payment Method}
-    D --> E[Pix Payment]
-    D --> F[Recurring Card Preapproval]
-    E --> G[Mercado Pago Confirmation]
-    F --> G
-    G --> H[Webhook Refetch + Binding Validation]
-    H --> I[Subscription Status]
-    I --> J[Web or iOS Account]
-    J --> K[QR Code Credential]
-    K --> L[Validator Scan]
-    L --> M[Partner Venue Access Decision]
+    A[Cadastro da conta] --> B[Assinatura criada]
+    B --> C{Metodo de pagamento}
+    C --> D[Pagamento Pix]
+    C --> E[Preapproval recorrente no cartao]
+    D --> F[Confirmacao Mercado Pago]
+    E --> F
+    F --> G[Refetch e validacao do webhook]
+    G --> H[Ativacao da assinatura]
+    H --> I[Conta web ou iOS]
+    I --> J[Credencial QR Code]
+    J --> K[Validacao no parceiro]
+    K --> L[Decisao de uso do beneficio]
 ```
 
-The access flow is not just "a subscription system". It connects registration, payment, subscription state, member identity, QR Code generation, validator authorization and partner venue access rules.
-
-## System Architecture
+## Arquitetura do Sistema
 
 ```mermaid
 flowchart TB
-    subgraph Clients
-        IOS[iOS App<br/>SwiftUI]
-        WEB[Member Web App<br/>React/Vite]
-        VAL[Validator Flow<br/>Camera QR Scan]
-        ADM[Admin Panel]
-    end
+    A[App iOS - SwiftUI] --> E[API REST]
+    B[Web do associado - React/Vite] --> E
+    C[Fluxo validador - scanner QR] --> E
+    D[Painel admin] --> E
 
-    IOS --> API[REST API]
-    WEB --> API
-    VAL --> API
-    ADM --> API
+    E --> F[Autenticacao e sessao]
+    E --> G[Servico de acesso da assinatura]
+    E --> H[Servicos de pagamento]
+    E --> I[Camada de QR access]
+    E --> J[Servico de check-in]
+    E --> K[(MySQL)]
 
-    API --> AUTH[Authentication + Session Rules]
-    API --> SUB[Subscription Access Service]
-    API --> QR[QR Access Layer]
-    API --> CHECKIN[Check-in Service]
-    API --> PAY[Payment Services]
+    H --> L[Mercado Pago]
+    L --> M[Webhooks e refetch no provedor]
+    M --> H
 
-    AUTH --> DB[(MySQL)]
-    SUB --> DB
-    QR --> DB
-    CHECKIN --> DB
-    PAY --> DB
-
-    PAY --> MP[Mercado Pago]
-    API --> EMAIL[Transactional Email]
-    API --> STORAGE[Avatar/File Storage]
+    E --> N[E-mail transacional]
+    E --> O[Storage de arquivos/avatar]
 ```
 
-## Tech Stack
+## Stack Técnica
 
-- Backend: PHP 8.2 custom REST application with service/controller/model structure.
-- Frontend: React, Vite and admin/member web interfaces.
-- Mobile: Swift, SwiftUI, iOS 17, MVVM-style project structure.
-- Database: MySQL.
-- Payments: Mercado Pago Pix, card preapproval, recurring subscription paths, webhooks and split/recipient support.
-- QR/access: Generated QR credentials, validator scanner, preview and confirmed check-in.
-- Infrastructure: Docker, Nginx/PHP image, docker-compose, CI workflows, Cloud Build/Cloud Run deployment material.
+- Backend: PHP 8.2, aplicação REST customizada com estrutura de services/controllers/models.
+- Frontend: React, Vite e interfaces web para associado/admin.
+- Mobile: Swift, SwiftUI, iOS 17 e organização em estilo MVVM.
+- Banco de dados: MySQL.
+- Pagamentos: Mercado Pago Pix, preapproval com cartão, recorrência, webhooks e suporte a split/recipient.
+- QR/acesso: geração de credenciais QR, scanner validador, preview e check-in confirmado.
+- Infraestrutura: Docker, imagem Nginx/PHP, docker-compose, CI, Cloud Build/Cloud Run.
 
-## Mobile Application
+## Aplicativo Mobile
 
-The iOS app is the main public evidence that the product extends beyond web/backend delivery.
+O aplicativo iOS é uma evidência importante de que o produto vai além de web/backend.
 
-Confirmed stack and implementation:
+Detalhes confirmados:
 
-- **Language/UI:** Swift and SwiftUI.
-- **Architecture:** MVVM-style structure with `Views`, `ViewModels`, `Models`, `Services`, `Core` and feature folders.
-- **Minimum target:** iOS 17.
-- **Networking:** `URLSession`, typed API endpoints and Codable DTOs.
-- **API communication:** Bearer token requests against the backend REST API.
-- **Authentication/session:** login flow, token persisted in Keychain, session restoration and logout on unauthorized responses.
-- **Navigation:** role-based root routing for subscriber, validator and admin flows; subscriber `TabView`; admin iPad `NavigationSplitView`.
-- **QR Code:** subscriber wallet renders the QR credential with Core Image only when backend access state allows it.
-- **Validation:** validator scanner uses AVFoundation camera scanning, preview, identity confirmation and backend check-in confirmation.
-- **Environment configuration:** local/staging/production API environments through build configuration files.
-- **Build:** Xcode project, release/debug configuration and automated iOS validation in CI.
-- **Publication:** App Store screenshot and operation material exists, but public App Store/TestFlight publication was not treated as proven from the code alone.
-- **Push notifications:** not confirmed as implemented.
+- Linguagem/UI: Swift e SwiftUI.
+- Arquitetura: organização em estilo MVVM com `Views`, `ViewModels`, `Models`, `Services`, `Core` e pastas por feature.
+- Networking: `URLSession`, endpoints tipados e DTOs Codable.
+- Autenticação/sessão: requisições com bearer token, persistência em Keychain, restauração de sessão e logout em respostas não autorizadas.
+- Navegação: roteamento raiz por perfil para associado, validador e admin; `TabView` para associado; `NavigationSplitView` para admin em iPad.
+- QR Code: carteira do associado renderiza a credencial com Core Image somente quando o backend permite acesso.
+- Validação: scanner do validador usa AVFoundation, preview, confirmação de identidade e confirmação de check-in no backend.
+- Configuração de ambiente: ambientes local, staging e produção por arquivos de build.
+- Build: projeto Xcode com configuração debug/release e validação iOS automatizada em CI.
 
-## Screenshots
+Isso é apresentado como experiência prática em iOS dentro de um produto real, não como especialização sênior em iOS.
 
-Sanitized iPhone screenshots from the product repository:
+## Engenharia Backend
+
+Capacidades confirmadas no backend:
+
+- Autenticação com JWT/token versioning para logout e revogação.
+- Usuários, perfis de associado, estado da conta, verificação de e-mail e recuperação de senha.
+- Planos, assinaturas, status de assinatura e avaliação de estado de acesso.
+- Tentativas de pagamento Pix e fluxos recorrentes com preapproval de cartão.
+- Webhooks Mercado Pago com refetch no provedor antes de alterar estado local.
+- Criação, rotação, expiração e checagem de acesso do QR Code do associado.
+- Preview de QR pelo validador e check-in confirmado.
+- Controle de acesso por estabelecimento, status do parceiro e autorização do validador.
+- APIs admin para usuários, estabelecimentos, assinaturas, pagamentos, QR Codes, validadores, configuração de pagamento, split, e-mail e logs de auditoria/segurança.
+
+## Dados / Banco de Dados
+
+O schema MySQL inclui usuários, estabelecimentos, planos, assinaturas, pagamentos de assinatura, tentativas de pagamento, QR Codes, check-ins, validadores, vínculos com estabelecimentos, identidades, registros admin/auditoria e tabelas relacionadas a e-mail.
+
+O QR access é stateful. O backend decide se o associado pode exibir ou usar a credencial com base em pagamento, assinatura, conta, regras do estabelecimento e histórico de check-in.
+
+## Integrações
+
+- Criação de pagamento Pix via Mercado Pago.
+- Preapproval de cartão via Mercado Pago para fluxos recorrentes.
+- Webhooks Mercado Pago com refetch de recurso e validação de vínculo.
+- Suporte a recipient/split Mercado Pago por regras de pagamento e application fee.
+- Fluxos de e-mail transacional.
+- Integração do app iOS nativo com a API REST.
+
+## Segurança
+
+Detalhes confirmados no código privado:
+
+- Revogação de sessão por JWT/token version.
+- Avaliação de acesso da assinatura controlada pelo backend.
+- Pagamentos Pix pendentes não liberam acesso de associado.
+- Estado de preapproval separado da ativação paga.
+- Webhooks verificados por refetch no provedor e validações locais.
+- Tratamento idempotente de pagamentos/eventos com registros locais e constraints.
+- Tokens QR rotacionam e expiram.
+- Autorização por estabelecimento e janela de acesso aplicada no backend.
+- Estudo de caso público criado sem histórico Git privado ou credenciais de provedor.
+
+## Ciclo de Pagamento
+
+```mermaid
+flowchart TB
+    A[Assinatura criada como pendente] --> B{Tipo de checkout}
+    B --> C[Tentativa Pix]
+    B --> D[Preapproval de cartao]
+    C --> E[Pagamento Mercado Pago]
+    D --> F[Preapproval / pagamento autorizado]
+    E --> G[Webhook recebido]
+    F --> G
+    G --> H[Refetch no provedor]
+    H --> I[Validacao de valor, moeda e vinculo]
+    I --> J[Registro local idempotente]
+    J --> K[Periodo de assinatura ativado]
+    K --> L[Acesso do associado liberado]
+```
+
+Pontos importantes:
+
+- Criação de Pix usa registros locais de tentativa e chaves de idempotência Mercado Pago.
+- Pix pendente não libera acesso.
+- Assinaturas recorrentes com cartão usam fluxos de preapproval Mercado Pago.
+- Preapproval sozinho não ativa acesso pago; é necessária confirmação de pagamento aprovado.
+- Webhooks não são aceitos cegamente: o backend refaz a consulta no provedor antes de aplicar estado.
+- Duplicidade é controlada por registros locais e constraints.
+- Split/marketplace existe por conexão de recipient Mercado Pago e application fee.
+
+## Ciclo de Acesso por QR Code
+
+```mermaid
+flowchart LR
+    A[Acesso de assinatura ativo] --> B[Gerar ou retornar QR ativo]
+    B --> C[Exibicao iOS/Web]
+    C --> D[Scanner do validador]
+    D --> E[Preview do QR]
+    E --> F[Confirmacao de identidade]
+    F --> G[Servico de check-in]
+    G --> H{Acesso permitido?}
+    H --> I[Check-in aprovado]
+    H --> J[Negado / duplicado / bloqueado]
+```
+
+O acesso por QR é stateful. O backend decide se o associado pode exibir/usar a credencial com base em assinatura, pagamento, conta e regras de check-in.
+
+## Desafios de Engenharia
+
+- Sincronizar estado externo de pagamento com acesso local da assinatura.
+- Evitar ativação enquanto Pix ainda está pendente.
+- Separar preapproval recorrente de ativação paga.
+- Processar webhooks de forma idempotente e verificada no provedor.
+- Bloquear QR quando conta ou assinatura não permitem acesso.
+- Rotacionar e expirar QR sem quebrar associados ativos.
+- Validar acesso por estabelecimento, autorização de validador, janela de uso e duplicidade.
+- Atender mobile, web, admin e validador pela mesma API.
+
+## Testes e Confiabilidade
+
+O repositório privado contém CI e materiais de validação para backend, web, mobile, readiness de deploy e scripts operacionais.
+
+A confiabilidade também aparece no desenho transacional: refetch no provedor, aplicação idempotente de pagamentos, constraints, avaliação explícita de assinatura e decisões de QR/check-in controladas pelo backend.
+
+## Infraestrutura e Deploy
+
+O repositório privado inclui Docker, docker-compose, imagem Nginx/PHP, Cloud Build, referências Cloud Run, scripts de deploy staging/produção, readiness checks e material de runbook.
+
+Identificadores de projeto, nomes de serviço, URLs de produção e credenciais não são publicados.
+
+## Produção
+
+Existe material de deploy e operação em produção no código privado. Este estudo de caso expõe arquitetura e decisões de engenharia mantendo detalhes operacionais privados.
+
+## Capturas de Tela
+
+Capturas de tela iPhone sanitizadas do repositório do produto:
 
 <p>
-  <img src="docs/screenshots/ios/01-login.png" width="170" alt="Club Pass Belém iOS login screen">
-  <img src="docs/screenshots/ios/02-home.png" width="170" alt="Club Pass Belém iOS member home screen">
-  <img src="docs/screenshots/ios/03-qr-code.png" width="170" alt="Club Pass Belém iOS QR Code screen">
-  <img src="docs/screenshots/ios/04-venues.png" width="170" alt="Club Pass Belém iOS partner venues screen">
-  <img src="docs/screenshots/ios/05-profile.png" width="170" alt="Club Pass Belém iOS profile screen">
+  <img src="docs/screenshots/ios/01-login.png" width="170" alt="Tela de login iOS do Club Pass Belém">
+  <img src="docs/screenshots/ios/02-home.png" width="170" alt="Tela inicial do associado no iOS do Club Pass Belém">
+  <img src="docs/screenshots/ios/03-qr-code.png" width="170" alt="Tela de QR Code no iOS do Club Pass Belém">
+  <img src="docs/screenshots/ios/04-venues.png" width="170" alt="Tela de parceiros no iOS do Club Pass Belém">
+  <img src="docs/screenshots/ios/05-profile.png" width="170" alt="Tela de perfil no iOS do Club Pass Belém">
 </p>
 
-## Backend Engineering
+## Matriz de Evidências Técnicas
 
-Confirmed backend capabilities:
+Verificado contra a árvore privada em 2026-08-27.
 
-- Custom PHP 8.2 REST backend using PSR-4 autoloading.
-- MySQL schema with users, venues, plans, subscriptions, payments, check-ins, validator users, QR codes, access grants, identities, admin/audit and email-related tables.
-- JWT authentication with token versioning for logout and server-side revocation.
-- Separate member, validator and admin surfaces.
-- Email verification and password reset flows.
-- Subscription status and access state centralized in a subscription access service.
-- Member QR Code creation, rotation, expiration and access-state checks.
-- Validator QR preview and confirmed check-in flow.
-- Partner venue access control through authorized validator venues and active venue status.
-- Check-in rules for access window, max access count and venue reuse policy.
-- Admin APIs for users, venues, subscriptions, check-ins, QR codes, validators, payment settings, payment recipients, split rules, email settings and audit/security logs.
-- Avatar/file handling through storage services.
-
-## Data / Database
-
-The MySQL schema includes users, venues, plans, subscriptions, subscription payments, payment attempts, QR codes, check-ins, validator users, venue assignments, identities, admin/audit records and email-related tables.
-
-QR access is stateful. The backend decides whether a member can display or use the credential based on payment status, subscription status, account state, venue rules and check-in history.
-
-## Integrations
-
-- Mercado Pago Pix payment creation.
-- Mercado Pago card preapproval for recurring subscription paths.
-- Mercado Pago webhooks with resource refetch and binding validation.
-- Mercado Pago recipient/split support through payment recipient and application fee handling.
-- Transactional email flows.
-- Native iOS client integration with the backend REST API.
-
-## Security
-
-Security-relevant implementation details confirmed in the private codebase:
-
-- JWT/token-version session revocation.
-- Backend-controlled subscription access evaluation.
-- Pending Pix payments do not grant membership access.
-- Preapproval state is separated from actual paid activation.
-- Webhooks are verified through provider refetch and local binding checks.
-- Idempotent payment/event handling through local records and uniqueness constraints.
-- QR tokens rotate and expire.
-- Venue authorization and access-window rules are enforced by the backend.
-- Public case study created without private Git history or provider credentials.
-
-## Payment Lifecycle
-
-```mermaid
-flowchart TB
-    A[Subscription Created as Pending] --> B{Checkout Type}
-    B --> C[Pix Payment Attempt]
-    B --> D[Card Preapproval]
-    C --> E[Mercado Pago Payment]
-    D --> F[Mercado Pago Preapproval / Authorized Payment]
-    E --> G[Webhook Received]
-    F --> G
-    G --> H[Provider Resource Refetched]
-    H --> I[Amount / Currency / Ownership Binding Checked]
-    I --> J[Idempotent Local Payment Record]
-    J --> K[Subscription Period Activated]
-    K --> L[Membership Access Granted]
-```
-
-Important implementation details:
-
-- Pix payment creation uses local attempt records and Mercado Pago idempotency keys.
-- Pending Pix does not grant member access.
-- Recurring card subscriptions are represented through Mercado Pago preapproval flows.
-- A preapproval alone does not activate paid access; approved payment confirmation is required.
-- Webhooks are not trusted blindly: the backend refetches the provider resource before applying state changes.
-- Duplicate webhook/payment application is controlled through local event/payment records and uniqueness constraints.
-- Payment split/marketplace support exists through Mercado Pago recipient connection and application fee handling.
-
-## QR Access Lifecycle
-
-```mermaid
-flowchart LR
-    A[Active Subscription Access] --> B[Generate or Return Active QR Token]
-    B --> C[iOS/Web QR Display]
-    C --> D[Validator Scanner]
-    D --> E[QR Preview]
-    E --> F[Holder Identity Confirmation]
-    F --> G[Check-in Service]
-    G --> H{Access Allowed?}
-    H --> I[Approved Check-in]
-    H --> J[Denied / Duplicate / Blocked]
-```
-
-QR access is stateful. The backend decides whether the member can display/use the credential based on subscription status, payment status, account state and check-in rules.
-
-## Engineering Challenges
-
-Real challenges visible in the implementation:
-
-- Keeping subscription access synchronized with external payment state.
-- Handling Pix attempts without accidentally granting access while payment is still pending.
-- Separating recurring preapproval state from actual paid activation.
-- Making webhook processing idempotent and provider-verified.
-- Preventing QR access when the account or subscription is blocked.
-- Rotating and expiring QR tokens without breaking active members.
-- Validating access by venue, validator authorization and access window.
-- Avoiding duplicate check-ins through backend state and database constraints.
-- Supporting mobile, web, admin and validator clients against the same API.
-- Preparing production deployment with Docker, Nginx, CI, Cloud Build/Cloud Run material, deploy scripts and rollback/readiness checks.
-
-## Testing & Reliability
-
-The private repository includes CI and validation material for backend/web/mobile delivery, deployment readiness checks and operational scripts.
-
-Reliability is also built into the transactional design: provider refetch, idempotent payment application, uniqueness constraints, explicit subscription access evaluation and backend-owned QR/check-in decisions.
-
-## Infrastructure & Deployment
-
-The private repository includes Docker, docker-compose, Nginx/PHP image configuration, Cloud Build material, Cloud Run deployment references, staging/production deploy scripts, readiness checks and production runbook material.
-
-Exact project identifiers, service names, production URLs and credentials are intentionally not published.
-
-## Production
-
-Production-oriented deployment and operation material exists in the private codebase. This public case study exposes the architecture and engineering decisions while keeping operational details private.
-
-## Technical Evidence Matrix
-
-Verified against the private source tree on 2026-08-27.
-
-| Capability | Status | Evidence in implementation |
+| Capacidade | Status | Evidência na implementação |
 |---|---:|---|
-| Authentication | Confirmed | Auth controllers/services, JWT service, auth middleware, token version revocation |
-| Users | Confirmed | User tables, member profile APIs, account deletion, identities |
-| Subscriptions | Confirmed | Subscription controller/service, plans, subscription status and access service |
-| Payments | Confirmed | Mercado Pago service, subscription payments, Pix attempts, card preapproval |
-| Recurrence | Confirmed | Mercado Pago preapproval and recurring card subscription paths |
-| Subscription status | Confirmed | Centralized subscription access evaluation |
-| QR Code | Confirmed | Subscriber QR code table and QR service |
-| QR Code generation | Confirmed | `/api/me/qrcode` creates or returns an active member QR token |
-| QR Code validation | Confirmed | Validator preview and check-in confirmation endpoints |
-| Access control | Confirmed | Subscription access service, validator venue authorization, account blocking |
-| Partner venues | Confirmed | Venue models, APIs and validator/venue assignment |
-| Usage rules | Confirmed | Access window, max access count, multi-venue policy and duplicate prevention |
-| Backend | Confirmed | PHP REST backend with service/controller/model structure |
-| APIs | Confirmed | Member, validator, admin, subscription, payment and webhook routes |
-| Database | Confirmed | MySQL migrations for product, payment, QR, check-in and admin domains |
-| Admin panel | Confirmed | Admin routes and React admin pages for operations/configuration |
-| iOS application | Confirmed | Native SwiftUI app with Xcode project and iOS source tree |
-| Mobile/backend integration | Confirmed | iOS API client, endpoint enum, bearer authentication and session manager |
-| Notifications | Partial | Transactional email exists; push notifications were not confirmed |
-| Webhooks | Confirmed | Mercado Pago webhook controller and provider refetch flow |
-| Infrastructure | Confirmed | Dockerfile, docker-compose, Nginx/PHP image, Cloud Build material and CI workflow |
-| Deploy/production workflow | Confirmed | Staging/production deploy scripts, readiness checks and production runbook material |
+| Autenticação | Confirmado | Controllers/services de auth, JWT service, middleware auth, revogação por token version |
+| Usuários | Confirmado | Tabelas de usuário, APIs de perfil, exclusão de conta, identidades |
+| Assinaturas | Confirmado | Controller/service de assinatura, planos, status e serviço de acesso |
+| Pagamentos | Confirmado | Mercado Pago service, pagamentos de assinatura, tentativas Pix, preapproval de cartão |
+| Recorrência | Confirmado | Preapproval Mercado Pago e caminhos de assinatura recorrente com cartão |
+| Status de assinatura | Confirmado | Avaliação centralizada de acesso |
+| QR Code | Confirmado | Tabela e serviço de QR Code do associado |
+| Geração de QR Code | Confirmado | `/api/me/qrcode` cria ou retorna QR ativo do associado |
+| Validação de QR Code | Confirmado | Endpoints de preview e confirmação de check-in |
+| Controle de acesso | Confirmado | Serviço de assinatura, autorização por estabelecimento, bloqueio de conta |
+| Estabelecimentos parceiros | Confirmado | Models/APIs de venue e atribuição de validador |
+| Regras de uso | Confirmado | Janela de acesso, limite de uso, política multi-venue e prevenção de duplicidade |
+| Backend | Confirmado | Backend REST PHP com estrutura de services/controllers/models |
+| APIs | Confirmado | Rotas member, validator, admin, subscription, payment e webhook |
+| Banco de dados | Confirmado | Migrations MySQL para produto, pagamento, QR, check-in e admin |
+| Painel administrativo | Confirmado | Rotas admin e páginas React para operação/configuração |
+| Aplicativo iOS | Confirmado | App SwiftUI nativo com projeto Xcode e árvore de código iOS |
+| Integração mobile/backend | Confirmado | API client iOS, enum de endpoints, bearer auth e session manager |
+| Notificações | Parcial | E-mail transacional existe; push notifications não foram confirmadas |
+| Webhooks | Confirmado | Controller Mercado Pago e fluxo de refetch no provedor |
+| Infraestrutura | Confirmado | Dockerfile, docker-compose, imagem Nginx/PHP, Cloud Build e workflow CI |
+| Deploy/produção | Confirmado | Scripts de staging/produção, readiness checks e material de runbook |
 
-## My Role / What I Built
+## Meu Papel / O Que Construí
 
-This case demonstrates full product engineering across backend, frontend, mobile, payments, QR access, database modeling, admin operations, deployment preparation and production-oriented safeguards.
+Este case demonstra engenharia de produto completa: backend, frontend, mobile, pagamentos, QR access, modelagem de banco, operação admin, preparação de deploy e salvaguardas orientadas à produção.
 
-## Key Engineering Decisions
+## Decisões Técnicas Principais
 
-- Treat membership access as a backend state machine rather than a UI flag.
-- Require payment confirmation before granting QR-based benefit usage.
-- Use provider refetch and local binding checks before applying webhook state.
-- Keep QR display and validation dependent on active subscription/account state.
-- Position iOS honestly as hands-on mobile development within a broader software engineering profile.
+- Tratar acesso de associado como uma máquina de estados no backend, não como flag de UI.
+- Exigir confirmação de pagamento antes de liberar uso de benefício via QR Code.
+- Usar refetch no provedor e validações locais antes de aplicar estado de webhook.
+- Fazer exibição e validação de QR dependerem de assinatura/conta ativas.
+- Posicionar iOS de forma honesta como experiência prática dentro de um perfil mais amplo de engenharia.
 
-## What Is Not Claimed
+## O Que Não É Afirmado
 
-- No claim that iOS is my primary specialization.
-- No claim that push notifications are implemented.
-- No claim that App Store/TestFlight publication is proven from this public case study.
-- No publication of secrets, provider tokens, production project IDs or sensitive infrastructure configuration.
+- Não afirmo que iOS é minha especialização principal.
+- Não afirmo que push notifications estão implementadas.
+- Não afirmo publicação em App Store/TestFlight como provada por este case público.
+- Não publico secrets, tokens de provedor, IDs de projetos de produção ou configuração sensível de infraestrutura.
