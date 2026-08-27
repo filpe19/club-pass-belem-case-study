@@ -1,12 +1,28 @@
 # Club Pass Belém
 
-### Subscription & QR Access Platform
+### Subscriptions / QR Access / Payments / iOS
+
+## Overview
 
 Subscription platform connecting members to partner venues through Mercado Pago payments, digital membership management and QR Code-based access validation.
 
 The product includes a PHP REST backend, a React/Vite web and admin application, validator flows, MySQL persistence and a native SwiftUI iOS application.
 
 > Source code remains private. This repository is a public technical case study with sanitized screenshots and no secrets, tokens, credentials or sensitive infrastructure details.
+
+## Problem
+
+The product needed to connect recurring membership payment with real-world benefit usage at partner venues.
+
+That means the system cannot stop at "user subscribed". It must activate membership only after payment confirmation, expose member identity safely, generate QR credentials, validate access at the venue, enforce usage rules and support web, admin, validator and iOS clients against the same backend.
+
+## Solution
+
+The private codebase implements a backend-owned subscription and access model.
+
+Payment state is confirmed through Mercado Pago flows and webhooks, subscription access is evaluated by backend services, and QR Code display/validation depends on account, subscription, venue and check-in rules.
+
+The iOS app is presented as hands-on mobile development inside a real product, not as a claim of senior iOS specialization.
 
 ## Product Flow
 
@@ -62,6 +78,16 @@ flowchart TB
     API --> STORAGE[Avatar/File Storage]
 ```
 
+## Tech Stack
+
+- Backend: PHP 8.2 custom REST application with service/controller/model structure.
+- Frontend: React, Vite and admin/member web interfaces.
+- Mobile: Swift, SwiftUI, iOS 17, MVVM-style project structure.
+- Database: MySQL.
+- Payments: Mercado Pago Pix, card preapproval, recurring subscription paths, webhooks and split/recipient support.
+- QR/access: Generated QR credentials, validator scanner, preview and confirmed check-in.
+- Infrastructure: Docker, Nginx/PHP image, docker-compose, CI workflows, Cloud Build/Cloud Run deployment material.
+
 ## Mobile Application
 
 The iOS app is the main public evidence that the product extends beyond web/backend delivery.
@@ -82,7 +108,7 @@ Confirmed stack and implementation:
 - **Publication:** App Store screenshot and operation material exists, but public App Store/TestFlight publication was not treated as proven from the code alone.
 - **Push notifications:** not confirmed as implemented.
 
-### iOS Screenshots
+## Screenshots
 
 Sanitized iPhone screenshots from the product repository:
 
@@ -110,6 +136,35 @@ Confirmed backend capabilities:
 - Check-in rules for access window, max access count and venue reuse policy.
 - Admin APIs for users, venues, subscriptions, check-ins, QR codes, validators, payment settings, payment recipients, split rules, email settings and audit/security logs.
 - Avatar/file handling through storage services.
+
+## Data / Database
+
+The MySQL schema includes users, venues, plans, subscriptions, subscription payments, payment attempts, QR codes, check-ins, validator users, venue assignments, identities, admin/audit records and email-related tables.
+
+QR access is stateful. The backend decides whether a member can display or use the credential based on payment status, subscription status, account state, venue rules and check-in history.
+
+## Integrations
+
+- Mercado Pago Pix payment creation.
+- Mercado Pago card preapproval for recurring subscription paths.
+- Mercado Pago webhooks with resource refetch and binding validation.
+- Mercado Pago recipient/split support through payment recipient and application fee handling.
+- Transactional email flows.
+- Native iOS client integration with the backend REST API.
+
+## Security
+
+Security-relevant implementation details confirmed in the private codebase:
+
+- JWT/token-version session revocation.
+- Backend-controlled subscription access evaluation.
+- Pending Pix payments do not grant membership access.
+- Preapproval state is separated from actual paid activation.
+- Webhooks are verified through provider refetch and local binding checks.
+- Idempotent payment/event handling through local records and uniqueness constraints.
+- QR tokens rotate and expire.
+- Venue authorization and access-window rules are enforced by the backend.
+- Public case study created without private Git history or provider credentials.
 
 ## Payment Lifecycle
 
@@ -171,6 +226,22 @@ Real challenges visible in the implementation:
 - Supporting mobile, web, admin and validator clients against the same API.
 - Preparing production deployment with Docker, Nginx, CI, Cloud Build/Cloud Run material, deploy scripts and rollback/readiness checks.
 
+## Testing & Reliability
+
+The private repository includes CI and validation material for backend/web/mobile delivery, deployment readiness checks and operational scripts.
+
+Reliability is also built into the transactional design: provider refetch, idempotent payment application, uniqueness constraints, explicit subscription access evaluation and backend-owned QR/check-in decisions.
+
+## Infrastructure & Deployment
+
+The private repository includes Docker, docker-compose, Nginx/PHP image configuration, Cloud Build material, Cloud Run deployment references, staging/production deploy scripts, readiness checks and production runbook material.
+
+Exact project identifiers, service names, production URLs and credentials are intentionally not published.
+
+## Production
+
+Production-oriented deployment and operation material exists in the private codebase. This public case study exposes the architecture and engineering decisions while keeping operational details private.
+
 ## Technical Evidence Matrix
 
 Verified against the private source tree on 2026-08-27.
@@ -200,13 +271,21 @@ Verified against the private source tree on 2026-08-27.
 | Infrastructure | Confirmed | Dockerfile, docker-compose, Nginx/PHP image, Cloud Build material and CI workflow |
 | Deploy/production workflow | Confirmed | Staging/production deploy scripts, readiness checks and production runbook material |
 
+## My Role / What I Built
+
+This case demonstrates full product engineering across backend, frontend, mobile, payments, QR access, database modeling, admin operations, deployment preparation and production-oriented safeguards.
+
+## Key Engineering Decisions
+
+- Treat membership access as a backend state machine rather than a UI flag.
+- Require payment confirmation before granting QR-based benefit usage.
+- Use provider refetch and local binding checks before applying webhook state.
+- Keep QR display and validation dependent on active subscription/account state.
+- Position iOS honestly as hands-on mobile development within a broader software engineering profile.
+
 ## What Is Not Claimed
 
 - No claim that iOS is my primary specialization.
 - No claim that push notifications are implemented.
 - No claim that App Store/TestFlight publication is proven from this public case study.
 - No publication of secrets, provider tokens, production project IDs or sensitive infrastructure configuration.
-
-## Role Demonstrated
-
-This case demonstrates full product engineering across backend, frontend, mobile, payments, QR access, database modeling, admin operations, deployment preparation and production-oriented safeguards.
