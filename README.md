@@ -2,6 +2,8 @@
 
 ### Assinaturas / Acesso por QR Code / Pagamentos / iOS
 
+App iOS na [App Store](https://apps.apple.com/br/app/clubpass-bel%C3%A9m/id6787500885)
+
 ## Visão Geral
 
 Club Pass Belém é uma plataforma de assinatura e acesso por QR Code que conecta associados a estabelecimentos parceiros por meio de pagamentos Mercado Pago, gestão digital de assinatura e validação de uso do benefício.
@@ -22,7 +24,7 @@ O código privado implementa um modelo de assinatura e acesso controlado pelo ba
 
 O estado do pagamento é confirmado por fluxos Mercado Pago e webhooks, o acesso da assinatura é avaliado por serviços backend, e a exibição/validação do QR Code depende de regras de conta, assinatura, estabelecimento e check-in.
 
-O app iOS é um cliente real do produto para associados e validadores, demonstrando experiência prática em iOS dentro de um sistema full stack mais amplo.
+O app iOS é um cliente real do produto para associados e validadores, publicado na App Store e ligado à mesma API da web.
 
 ## Fluxo do Produto
 
@@ -78,7 +80,7 @@ flowchart TB
 
 ## Aplicativo Mobile
 
-O aplicativo iOS é uma evidência importante de que o produto vai além de web/backend.
+O app está publicado na App Store, hoje na versão 1.1, e atende associados, validadores e administradores.
 
 Detalhes confirmados:
 
@@ -91,8 +93,6 @@ Detalhes confirmados:
 - Validação: scanner do validador usa AVFoundation, preview, confirmação de identidade e confirmação de check-in no backend.
 - Configuração de ambiente: ambientes local, staging e produção por arquivos de build.
 - Build: projeto Xcode com configuração debug/release e validação iOS automatizada em CI.
-
-Isso é apresentado como experiência prática em iOS dentro de um produto real, não como especialização sênior em iOS.
 
 ## Engenharia Backend
 
@@ -260,7 +260,6 @@ Este case demonstra engenharia de produto completa: backend, frontend, mobile, p
 - Exigir confirmação de pagamento antes de liberar uso de benefício via QR Code.
 - Usar refetch no provedor e validações locais antes de aplicar estado de webhook.
 - Fazer exibição e validação de QR dependerem de assinatura/conta ativas.
-- Posicionar iOS de forma honesta como experiência prática dentro de um perfil mais amplo de engenharia.
 
 ## O Que Não É Afirmado
 
